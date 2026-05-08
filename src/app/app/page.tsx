@@ -322,36 +322,35 @@ export default function AppPage() {
         </div>
 
         {/* ═══ RIGHT PANEL ═══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
           {/* Account Bar — ALWAYS visible */}
           {currentAccount && (
-            <div className="glass-card" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #ef4444, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(239,68,68,0.2)', flexShrink: 0 }}>
-                <UserIcon style={{ width: 20, height: 20, color: 'white' }} />
+            <>
+              <div className="glass-card" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #ef4444, #f97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(239,68,68,0.2)', flexShrink: 0 }}>
+                  <UserIcon style={{ width: 20, height: 20, color: 'white' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentAccount.email}</p>
+                  <p style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Account #{currentIndex + 1} of {accounts.length}</p>
+                </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentAccount.email}</p>
-                <p style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Account #{currentIndex + 1} of {accounts.length}</p>
-              </div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-                {/* Credentials button */}
+              {/* Action Buttons — separate row, aligned right */}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexShrink: 0, minHeight: 36 }}>
                 <button onClick={fetchCredentials} title="Show credentials" style={{ width: 36, height: 36, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: showCreds ? 'rgba(168,85,247,0.15)' : 'rgba(255,255,255,0.04)', border: showCreds ? '1px solid rgba(168,85,247,0.2)' : '1px solid rgba(255,255,255,0.06)', transition: 'all 0.15s' }}>
                   {loadingCreds ? <RefreshCw style={{ width: 15, height: 15, color: '#a855f7', animation: 'spin 1s linear infinite' }} /> : showCreds ? <EyeOff style={{ width: 15, height: 15, color: '#a855f7' }} /> : <Eye style={{ width: 15, height: 15, color: '#94a3b8' }} />}
                 </button>
-                {/* Refresh */}
                 <button onClick={fetchMail} disabled={fetching} title="Refresh" style={{ width: 36, height: 36, borderRadius: 9, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: fetching ? 0.4 : 1 }}>
                   <RefreshCw style={{ width: 15, height: 15, color: '#94a3b8', animation: fetching ? 'spin 1s linear infinite' : 'none' }} />
                 </button>
-                {/* Show */}
                 <button onClick={fetchMail} disabled={fetching} style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg, #059669, #10b981)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 3px 10px rgba(16,185,129,0.2)', opacity: fetching ? 0.5 : 1, whiteSpace: 'nowrap' }}>
                   <Download style={{ width: 14, height: 14 }} /> {fetching ? 'Loading...' : 'Show'}
                 </button>
-                {/* Next Mail */}
                 <button onClick={fetchAndNext} disabled={fetching || currentIndex >= accounts.length - 1} style={{ padding: '9px 18px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg, #ef4444, #f97316)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 3px 10px rgba(239,68,68,0.2)', opacity: fetching || currentIndex >= accounts.length - 1 ? 0.4 : 1, whiteSpace: 'nowrap' }}>
                   <ChevronRight style={{ width: 14, height: 14 }} /> Next Mail
                 </button>
               </div>
-            </div>
+            </>
           )}
 
           {/* Credentials Panel */}
@@ -377,7 +376,7 @@ export default function AppPage() {
 
 
           {/* Search Bar */}
-          <div className="glass-card" style={{ padding: '14px 18px' }}>
+          <div className="glass-card" style={{ padding: '14px 18px', flexShrink: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1, position: 'relative' }}>
                 <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#64748b' }} />
@@ -394,7 +393,7 @@ export default function AppPage() {
           </div>
 
           {/* Messages */}
-          <div className="glass-card" style={{ flex: 1, padding: 0, minHeight: 300, background: 'rgba(10,14,26,0.5)' }}>
+          <div className="glass-card" style={{ flex: 1, padding: 0, minHeight: 0, background: 'rgba(10,14,26,0.5)', overflowY: 'auto' }}>
             {filteredMessages.length === 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 300 }}>
                 <Mail style={{ width: 48, height: 48, color: '#1e293b', marginBottom: 12 }} />
