@@ -22,8 +22,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) { setError(data.error || 'Wrong password'); return; }
-      router.push('/app');
-      router.refresh();
+      window.location.href = '/app';
     } catch { setError('Connection error'); } finally { setLoading(false); }
   };
 

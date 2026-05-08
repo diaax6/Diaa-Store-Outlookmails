@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS email_accounts (
   token_expires_at TIMESTAMPTZ,
   total_fetches INTEGER DEFAULT 0,
   total_otps INTEGER DEFAULT 0,
+  is_used BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );

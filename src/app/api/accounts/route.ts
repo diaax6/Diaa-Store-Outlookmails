@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('email_accounts')
-    .select('id, email, status, health_score, last_checked_at, last_code, last_code_at, total_fetches, total_otps, assigned_to, token_expires_at, notes, client_id, created_at, updated_at')
+    .select('id, email, status, health_score, last_checked_at, last_code, last_code_at, total_fetches, total_otps, assigned_to, token_expires_at, notes, client_id, is_used, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });

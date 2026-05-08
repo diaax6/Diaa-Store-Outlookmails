@@ -77,6 +77,30 @@ export default function AppPage() {
     setTimeout(() => setCopiedCode(''), 2000);
   };
 
+  const fetchUsedFromServer = async () => {
+    try {
+      const res = await fetch('/api/accounts/used');
+      const json = await res.json();
+      if (json.success && json.used_ids) {
+        setUsedAccounts(new Set(json.used_ids));
+      }
+    } catch (err) { console.error('Failed to fetch used status:', err); }
+  };
+
+  const markUsedOnServer = async (accountId: string, isUsed: boolean) => {
+    try {
+      const res = await fetch('/api/accounts/used', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: accountId, is_used: isUsed }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        console.error('markUsed API error:', res.status, json);
+      }
+    } catch (err) { console.error('Failed to update used status:', err); }
+  };
+
   const fetchAccounts = async () => {
     try {
       const res = await fetch('/api/accounts');
@@ -90,11 +114,9 @@ export default function AppPage() {
           if (savedIdx >= 0 && savedIdx < active.length) setCurrentIndex(savedIdx);
           else if (currentIndex === -1) setCurrentIndex(0);
         }
-        // Restore used accounts
-        try {
-          const savedUsed = localStorage.getItem('ds_usedAccounts');
-          if (savedUsed) setUsedAccounts(new Set(JSON.parse(savedUsed)));
-        } catch {}
+        // Load used accounts from server response (shared across all users)
+        const usedIds = json.data.filter((a: EmailAccount & { is_used?: boolean }) => a.is_used).map((a: EmailAccount) => a.id);
+        setUsedAccounts(new Set(usedIds));
       }
     } catch (err) { console.error(err); }
   };
@@ -152,7 +174,8 @@ export default function AppPage() {
       const data = await res.json();
       if (data.data?.messages) setMessages(data.data.messages);
       if (data.data?.otps) setOtpResults(data.data.otps);
-      setUsedAccounts(prev => { const n = new Set([...prev, currentAccount.id]); localStorage.setItem('ds_usedAccounts', JSON.stringify([...n])); return n; });
+      setUsedAccounts(prev => { const n = new Set([...prev, currentAccount.id]); return n; });
+      markUsedOnServer(currentAccount.id, true);
     } finally { setFetching(false); }
   };
 
@@ -178,7 +201,8 @@ export default function AppPage() {
           const data = await res.json();
           if (data.data?.messages) setMessages(data.data.messages);
           if (data.data?.otps) setOtpResults(data.data.otps);
-          setUsedAccounts(prev => { const n = new Set([...prev, nextAcc.id]); localStorage.setItem('ds_usedAccounts', JSON.stringify([...n])); return n; });
+          setUsedAccounts(prev => { const n = new Set([...prev, nextAcc.id]); return n; });
+          markUsedOnServer(nextAcc.id, true);
         } finally { setFetching(false); }
       }
     }
@@ -232,15 +256,21 @@ export default function AppPage() {
     } finally { setImporting(false); }
   };
 
-  const clearAll = () => { setAccounts([]); setCurrentIndex(-1); setMessages([]); setOtpResults([]); setUsedAccounts(new Set()); localStorage.removeItem('ds_currentIndex'); localStorage.removeItem('ds_usedAccounts'); };
+  const clearAll = async () => {
+    setAccounts([]); setCurrentIndex(-1); setMessages([]); setOtpResults([]); setUsedAccounts(new Set());
+    localStorage.removeItem('ds_currentIndex');
+    // Clear used status on server too
+    try { await fetch('/api/accounts/used', { method: 'DELETE' }); } catch {}
+  };
 
   const toggleUsed = (accountId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setUsedAccounts(prev => {
       const next = new Set(prev);
-      if (next.has(accountId)) next.delete(accountId);
-      else next.add(accountId);
-      localStorage.setItem('ds_usedAccounts', JSON.stringify([...next]));
+      const willBeUsed = !next.has(accountId);
+      if (willBeUsed) next.add(accountId);
+      else next.delete(accountId);
+      markUsedOnServer(accountId, willBeUsed);
       return next;
     });
   };
