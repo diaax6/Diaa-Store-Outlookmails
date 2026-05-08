@@ -362,8 +362,9 @@ export default function AppPage() {
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentAccount.email}</p>
                   <p style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Account #{currentIndex + 1} of {accounts.length}</p>
                 </div>
-                <button onClick={copyEmail} title="Copy email" style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: copiedCode === 'email' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, transition: 'all 0.15s' }}>
-                  {copiedCode === 'email' ? <Check style={{ width: 14, height: 14, color: '#10b981' }} /> : <Copy style={{ width: 14, height: 14, color: '#94a3b8' }} />}
+                <button onClick={copyEmail} title="Copy email" style={{ padding: '6px 14px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', background: copiedCode === 'email' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, transition: 'all 0.15s' }}>
+                  {copiedCode === 'email' ? <Check style={{ width: 13, height: 13, color: '#10b981' }} /> : <Copy style={{ width: 13, height: 13, color: '#94a3b8' }} />}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: copiedCode === 'email' ? '#10b981' : '#94a3b8' }}>{copiedCode === 'email' ? 'Copied!' : 'Copy'}</span>
                 </button>
               </div>
               {/* Action Buttons — separate row, aligned right */}
