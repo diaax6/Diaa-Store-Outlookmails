@@ -84,14 +84,26 @@ export default function AppPage() {
       if (json.success && json.data) {
         const active = json.data.filter((a: EmailAccount) => a.status === 'active');
         setAccounts(active);
-        if (active.length > 0 && currentIndex === -1) setCurrentIndex(0);
+        // Restore saved index from localStorage
+        const savedIdx = parseInt(localStorage.getItem('ds_currentIndex') || '-1');
+        if (active.length > 0) {
+          if (savedIdx >= 0 && savedIdx < active.length) setCurrentIndex(savedIdx);
+          else if (currentIndex === -1) setCurrentIndex(0);
+        }
+        // Restore used accounts
+        try {
+          const savedUsed = localStorage.getItem('ds_usedAccounts');
+          if (savedUsed) setUsedAccounts(new Set(JSON.parse(savedUsed)));
+        } catch {}
       }
     } catch (err) { console.error(err); }
   };
 
   const goNext = useCallback(() => {
     if (currentIndex < accounts.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      const next = currentIndex + 1;
+      setCurrentIndex(next);
+      localStorage.setItem('ds_currentIndex', String(next));
       setMessages([]);
       setOtpResults([]);
     }
@@ -99,7 +111,9 @@ export default function AppPage() {
 
   const goPrev = useCallback(() => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
+      const prev = currentIndex - 1;
+      setCurrentIndex(prev);
+      localStorage.setItem('ds_currentIndex', String(prev));
       setMessages([]);
       setOtpResults([]);
     }
@@ -107,6 +121,7 @@ export default function AppPage() {
 
   const selectAccount = (idx: number) => {
     setCurrentIndex(idx);
+    localStorage.setItem('ds_currentIndex', String(idx));
     setMessages([]);
     setOtpResults([]);
     setCredentials(null);
@@ -137,7 +152,7 @@ export default function AppPage() {
       const data = await res.json();
       if (data.data?.messages) setMessages(data.data.messages);
       if (data.data?.otps) setOtpResults(data.data.otps);
-      setUsedAccounts(prev => new Set([...prev, currentAccount.id]));
+      setUsedAccounts(prev => { const n = new Set([...prev, currentAccount.id]); localStorage.setItem('ds_usedAccounts', JSON.stringify([...n])); return n; });
     } finally { setFetching(false); }
   };
 
@@ -145,6 +160,7 @@ export default function AppPage() {
     if (currentIndex < accounts.length - 1) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
+      localStorage.setItem('ds_currentIndex', String(nextIdx));
       setMessages([]);
       setOtpResults([]);
       setCredentials(null);
@@ -162,7 +178,7 @@ export default function AppPage() {
           const data = await res.json();
           if (data.data?.messages) setMessages(data.data.messages);
           if (data.data?.otps) setOtpResults(data.data.otps);
-          setUsedAccounts(prev => new Set([...prev, nextAcc.id]));
+          setUsedAccounts(prev => { const n = new Set([...prev, nextAcc.id]); localStorage.setItem('ds_usedAccounts', JSON.stringify([...n])); return n; });
         } finally { setFetching(false); }
       }
     }
@@ -216,7 +232,7 @@ export default function AppPage() {
     } finally { setImporting(false); }
   };
 
-  const clearAll = () => { setAccounts([]); setCurrentIndex(-1); setMessages([]); setOtpResults([]); setUsedAccounts(new Set()); };
+  const clearAll = () => { setAccounts([]); setCurrentIndex(-1); setMessages([]); setOtpResults([]); setUsedAccounts(new Set()); localStorage.removeItem('ds_currentIndex'); localStorage.removeItem('ds_usedAccounts'); };
 
   const toggleUsed = (accountId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -224,6 +240,7 @@ export default function AppPage() {
       const next = new Set(prev);
       if (next.has(accountId)) next.delete(accountId);
       else next.add(accountId);
+      localStorage.setItem('ds_usedAccounts', JSON.stringify([...next]));
       return next;
     });
   };
