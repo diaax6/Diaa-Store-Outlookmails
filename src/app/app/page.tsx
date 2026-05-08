@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Mail, Users, Plus, Search, Download, Trash2, X, Copy, Check,
   ChevronLeft, ChevronRight, Key, User as UserIcon, ArrowLeft,
-  RefreshCw, Eye, EyeOff
+  RefreshCw, Eye, EyeOff, LogOut
 } from 'lucide-react';
 
 interface EmailAccount {
@@ -32,6 +33,9 @@ interface OTPResult {
 }
 
 export default function AppPage() {
+  const router = useRouter();
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [messages, setMessages] = useState<MailMessage[]>([]);
@@ -54,8 +58,24 @@ export default function AppPage() {
   const topOTP = otpResults[0];
 
   useEffect(() => {
-    fetchAccounts();
+    // Verify session (IP-bound)
+    fetch('/api/auth/login').then(r => r.json()).then(d => {
+      if (d.success) { setAuthenticated(true); setAuthChecked(true); fetchAccounts(); }
+      else { setAuthChecked(true); router.push('/login'); }
+    }).catch(() => { setAuthChecked(true); router.push('/login'); });
   }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/login', { method: 'DELETE' });
+    router.push('/login');
+  };
+
+  const copyEmail = () => {
+    if (!currentAccount) return;
+    navigator.clipboard.writeText(currentAccount.email);
+    setCopiedCode('email');
+    setTimeout(() => setCopiedCode(''), 2000);
+  };
 
   const fetchAccounts = async () => {
     try {
@@ -215,6 +235,8 @@ export default function AppPage() {
   });
 
 
+  if (!authChecked) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#64748b' }}>Loading...</p></div>;
+  if (!authenticated) return null;
 
   return (
     <div style={{ minHeight: '100vh', padding: '20px 24px', maxWidth: 1480, margin: '0 auto' }}>
@@ -229,9 +251,15 @@ export default function AppPage() {
             <p style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>Outlook Mail Fetcher</p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 100, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
-          <div style={{ width: 7, height: 7, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>Ready</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 100, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
+            <div style={{ width: 7, height: 7, background: '#10b981', borderRadius: '50%', boxShadow: '0 0 8px rgba(16,185,129,0.5)' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#10b981' }}>Ready</span>
+          </div>
+          <button onClick={handleLogout} title="Logout" style={{ padding: '6px 14px', borderRadius: 100, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', transition: 'all 0.15s' }}>
+            <LogOut style={{ width: 14, height: 14, color: '#ef4444' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Logout</span>
+          </button>
         </div>
       </div>
 
@@ -334,6 +362,9 @@ export default function AppPage() {
                   <p style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentAccount.email}</p>
                   <p style={{ fontSize: 11, color: '#64748b', marginTop: 1 }}>Account #{currentIndex + 1} of {accounts.length}</p>
                 </div>
+                <button onClick={copyEmail} title="Copy email" style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: copiedCode === 'email' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', flexShrink: 0, transition: 'all 0.15s' }}>
+                  {copiedCode === 'email' ? <Check style={{ width: 14, height: 14, color: '#10b981' }} /> : <Copy style={{ width: 14, height: 14, color: '#94a3b8' }} />}
+                </button>
               </div>
               {/* Action Buttons — separate row, aligned right */}
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end', flexShrink: 0, minHeight: 36 }}>
